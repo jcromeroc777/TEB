@@ -61,6 +61,10 @@ export class WalletService {
         if (!user) {
             return { status: HttpStatus.NOT_FOUND, msg: 'user not found' };
         }
+        const wallet = await this.model.findOne({ user_id: user._id });
+        if (wallet.amount < Math.abs(paymentDTO.amount)) {
+            return { status: HttpStatus.PRECONDITION_FAILED, msg: 'no founds' };
+        }
         const token = Math.random().toString(36).substring(2, 8);
         const session_id = Math.random().toString(36).substring(2, 10);
         const payment = new this.modelPayment({
@@ -107,7 +111,7 @@ export class WalletService {
             token: cconfirmPaymentDTO.token,
             session_id: cconfirmPaymentDTO.session_id,
         });
-        if (!payment) {
+        if (!payment || payment.status !== PaymentStatus.PENDING) {
             return { status: HttpStatus.NOT_FOUND, msg: 'payment not found' };
         }
         const wallet = await this.model.findOne({ user_id: payment.user_id });
