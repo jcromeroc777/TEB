@@ -71,7 +71,7 @@ export class WalletService {
             status: PaymentStatus.PENDING,
         });
         await payment.save();
-        const url = `http://localhost:3001/api/v1/wallet/payment?token=${token}&sessionId=${session_id}`;
+        const url = `http://localhost:5173/payment?token=${token}&sessionId=${session_id}`;
         this.mailService.sendMail({
             from: 'jrinjustice777@gmail.com',
             to: user.email,
