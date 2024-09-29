@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { USER, WALLET } from 'src/common/models/models';
 import { Model } from 'mongoose';
 import { IWallet } from 'src/common/interfaces/wallet.interface';
+import { ConflictException } from '@nestjs/common';
 
 @Injectable()
 export class UserService {
@@ -19,6 +20,10 @@ export class UserService {
         return await bcrypt.hash(password, salt);
     }
     async create(userDTO: UserDTO): Promise<IUser> {
+        const existingUser = await this.findByEmail(userDTO.email) || await this.findByDocument(userDTO.document);
+        if (existingUser) {
+            throw new ConflictException('User already exists');
+        }
         const hash = await this.hashPassword(userDTO.password);
         const newUser = new this.model({ ...userDTO, password: hash });
         await newUser.save();
@@ -29,6 +34,10 @@ export class UserService {
 
     async findByEmail(email: string): Promise<IUser> {
         return await this.model.findOne({ email: email });
+    }
+
+    async findByDocument(document: string): Promise<IUser> {
+        return await this.model.findOne({ document: document });
     }
 
     async checkPassword(password: string, passwordDB: string): Promise<boolean> {
